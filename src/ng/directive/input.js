@@ -2533,11 +2533,16 @@ var maxlengthDirective = function() {
       var maxlength = 0;
       attr.$observe('maxlength', function(value) {
         maxlength = int(value) || 0;
+        if (!angular.isDefined(ctrl.$validators.maxlength)) {
+          ctrl.$validators.maxlength = function(value) {
+              return ctrl.$isEmpty(value) || value.length <= maxlength;
+          };
+        }
         ctrl.$validate();
       });
-      ctrl.$validators.maxlength = function(modelValue, viewValue) {
-        return ctrl.$isEmpty(viewValue) || viewValue.length <= maxlength;
-      };
+      //ctrl.$validators.maxlength = function(modelValue, viewValue) {
+      //  return ctrl.$isEmpty(viewValue) || viewValue.length <= maxlength;
+      //};
     }
   };
 };
@@ -2552,11 +2557,16 @@ var minlengthDirective = function() {
       var minlength = 0;
       attr.$observe('minlength', function(value) {
         minlength = int(value) || 0;
+        if (!angular.isDefined(ctrl.$validators.minlength)) {
+          ctrl.$validators.minlength = function(value) {
+            return ctrl.$isEmpty(value) || value.length >= minlength;
+          };
+        }
         ctrl.$validate();
       });
-      ctrl.$validators.minlength = function(modelValue, viewValue) {
-        return ctrl.$isEmpty(viewValue) || viewValue.length >= minlength;
-      };
+      //ctrl.$validators.minlength = function(modelValue, viewValue) {
+      //  return ctrl.$isEmpty(viewValue) || viewValue.length >= minlength;
+      //};
     }
   };
 };
