@@ -983,6 +983,7 @@ describe('ngModel', function() {
 
 describe('input', function() {
   var formElm, inputElm, scope, $compile, $sniffer, $browser, changeInputValueTo, currentSpec;
+  var compileProvider;
 
   function compileInput(inputHtml, mockValidity) {
     inputElm = jqLite(inputHtml);
@@ -1002,8 +1003,9 @@ describe('input', function() {
   var attrs;
   beforeEach(function() { currentSpec = this; });
   afterEach(function() { currentSpec = null; });
-  beforeEach(module(function($compileProvider) {
-    $compileProvider.directive('attrCapture', function() {
+  beforeEach(module(function($compileProvider, $exceptionHandlerProvider) {
+    compileProvider = $compileProvider;
+    compileProvider.directive('attrCapture', function() {
       return function(scope, element, $attrs) {
         attrs = $attrs;
       };
@@ -1864,6 +1866,40 @@ describe('input', function() {
 
 
   describe('maxlength', function() {
+
+    it('should validate after minlength attr being observed', function() {
+
+      var actualCalls = [];
+      var expectedCalls = [ "X-Observe", "X-Validate" ];
+
+      compileProvider
+        .directive('ngMinlengthX', function () {
+          return {
+            restrict: 'A',
+            require: '?ngModel',
+            link: function (scope, elm, attr, ctrl) {
+              if (!ctrl)
+                return;
+
+              var minlength = 0;
+              attr.$observe('minlength', function(value) {
+                actualCalls.push("[X-Observe]");
+                minlength = int(value) || 0;
+                ctrl.$validate();
+              });
+
+              ctrl.$validators.minlength = function(modelValue, viewValue) {
+                actualCalls.push("[X-Validate]");
+                return ctrl.$isEmpty(viewValue) || viewValue.length >= minlength;
+              };
+            }
+          };
+        });
+
+      compileInput('<input type="text" ng-model="value" ng-minlength-x="5"/>');
+
+      expect(actualCalls).toEqual(expectedCalls);
+    });
 
     it('should invalidate values that are longer than the given maxlength', function() {
       compileInput('<input type="text" ng-model="value" ng-maxlength="5" />');
